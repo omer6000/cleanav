@@ -17,6 +17,8 @@ pub fn run(
             break navigation::output(&output, (map, state));
         } else {
             navigation::step(&mut map, &mut state, slope);
+            // println!("{}",state.x);
+            // break navigation::output(&output, (map, state));
         }
     }
 }

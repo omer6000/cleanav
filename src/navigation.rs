@@ -8,11 +8,19 @@ pub enum Cell {
 }
 
 #[derive(Clone, Debug)]
-pub struct State {}
+pub struct State {
+    x: usize,
+    y: usize,
+    steps: usize
+}
 
 impl State {
     pub fn new() -> Self {
-        Self {}
+        Self {
+            x: 0,
+            y: 0,
+            steps: 0
+        }
     }
 }
 
@@ -50,7 +58,22 @@ impl From<String> for Termination {
 }
 
 pub(crate) fn terminal(termination: &Termination, map: &crate::map::Map, state: &State) -> bool {
-    todo!()
+    match termination {
+        Termination::Steps(i) => {
+            if *i == state.steps {
+                return true;
+            }
+        }
+        // if i == state.steps break 
+        // println!("{}",x),
+    };
+    return false;
+    // todo!()
+    // let termination = Termination::Steps(steps)   {
+    //     println!("Terminate after {} steps", steps);
+    // }
+    // return true
+    // if 
 }
 
 pub enum Output {
@@ -79,9 +102,36 @@ where
 }
 
 pub(crate) fn output(output: &Output, end: (crate::map::Map, State)) -> String {
-    todo!();
+    // todo!();
+    // println!("{}",output.into());
+    // return String::from("");
+    // println!("Output: {:?}", output);
+    // return "".to_string();
+    // match output {
+    //     Output::Position => println!("Helloo"),
+    // };
+    // match output{
+    //     Output::Position => print!("{}",Position),
+    // }
+    return "abc".to_string()
 }
 
 pub(crate) fn step(map: &mut crate::map::Map, state: &mut State, slope: (usize, usize)) -> () {
-    todo!()
+    // todo!()
+    // let (x,y) = &slope.;
+    state.steps += 1;
+    state.x += slope.0;
+    state.y += slope.1;
+
+    let cell = map.get((state.x,state.y));
+    match cell {
+        Cell::Trash => map.clean((state.x,state.y)),
+        Cell::Free => {},
+
+    }
+
+    // println!("Step!!");
+    // println!("{} {}",x,y);
+    // return ();
+    // return (slope[0],slope[1]);
 }

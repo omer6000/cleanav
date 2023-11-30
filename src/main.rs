@@ -12,6 +12,7 @@ fn main() {
         output,
     } = tui::parse_args();
     let map = Map::from_path(&map_path);
+    // println!("{}",output);
     let result = run(
         map,
         slope,
