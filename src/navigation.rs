@@ -113,9 +113,10 @@ pub enum Output {
     Steps,
     TerminalSymbol,
     DistinctSymbols,
-    Trash,
-    Free,
-    Buoy,
+    SymbolCount(Cell)
+    // Trash,
+    // Free,
+    // Buoy,
 }
 
 impl FromStr for Output {
@@ -137,9 +138,9 @@ where
             "n" => Output::Steps,
             "s" => Output::TerminalSymbol,
             "d" => Output::DistinctSymbols,
-            "c,x" => Output::Trash,
-            "c,." => Output::Free,
-            "c,o" => Output::Buoy,
+            "c,x" => Output::SymbolCount(Cell::Trash),
+            "c,." => Output::SymbolCount(Cell::Free),
+            "c,o" => Output::SymbolCount(Cell::Buoy),
             _ => panic!("{} is not supported", text),
         }
     }
@@ -168,10 +169,14 @@ pub(crate) fn output(output: &Output, end: (crate::map::Map, State)) -> String {
                 Cell::Buoy => return 'O'.to_string(),
             }
         }
-        Output::Position => return format!("({},{})", end.1.x,end.1.y),
-        Output::Trash => return end.1.trash.to_string(),
-        Output::Free => return end.1.free.to_string(),
-        Output::Buoy => return end.1.buoy.to_string(),
+        Output::Position => return format!("({}, {})", end.1.x,end.1.y),
+        Output::SymbolCount(cell) => {
+            match *cell {
+                Cell::Buoy => return end.1.buoy.to_string(),
+                Cell::Free => return end.1.free.to_string(),
+                Cell::Trash => return end.1.trash.to_string(),
+            }
+        }
 
     };
 }
