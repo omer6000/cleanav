@@ -59,11 +59,23 @@ impl From<Cell> for char {
 
 pub enum Termination {
     Steps(usize),
+    Symbol(char),
+    Position((usize,usize)),
 }
 
 impl From<String> for Termination {
     fn from(text: String) -> Self {
-        Termination::Steps(text.parse().unwrap())
+        if text.to_lowercase().starts_with("s") {
+            Termination::Symbol(text.chars().nth(2).unwrap())
+        }
+        else if text.to_lowercase().starts_with("p") {
+            let x = text[2..3].parse().unwrap();
+            let y = text[4..5].parse().unwrap();
+            Termination::Position((x,y))
+        }
+        else {
+            Termination::Steps(text.parse().unwrap())
+        }
     }
 }
 
@@ -71,6 +83,24 @@ pub(crate) fn terminal(termination: &Termination, map: &crate::map::Map, state: 
     match termination {
         Termination::Steps(i) => {
             if *i == state.steps {
+                return true;
+            }
+        }
+        Termination::Position((x,y)) => {
+            if *x == state.x && *y == state.y {
+                return true
+            }
+        }
+        Termination::Symbol(s) => {
+            let term_cell = Cell::try_from(*s).unwrap();
+            let lastcell: Cell;
+            if state.steps == 0 {
+                lastcell = map.get((0,0));
+            }
+            else {
+                lastcell = state.lastcell;
+            }
+            if term_cell == lastcell {
                 return true;
             }
         }
@@ -146,11 +176,7 @@ pub(crate) fn output(output: &Output, end: (crate::map::Map, State)) -> String {
     };
 }
 
-pub(crate) fn step(map: &mut crate::map::Map, state: &mut State, slope: (usize, usize)) -> () {
-    state.steps += 1;
-    state.x = (state.x + slope.0) % map.width();
-    state.y = (state.y + slope.1) % map.height();
-
+fn process_cell(state: &mut State,map: &mut crate::map::Map) {
     let cell = map.get((state.x,state.y));
     match cell {
         Cell::Trash => {
@@ -167,5 +193,17 @@ pub(crate) fn step(map: &mut crate::map::Map, state: &mut State, slope: (usize, 
             state.lastcell = Cell::Buoy;
         },
     };
+}
+
+
+pub(crate) fn step(map: &mut crate::map::Map, state: &mut State, slope: (usize, usize)) -> () {
+    if state.steps == 0 { //dealing with step 0
+        process_cell(state, map);
+    }
+    state.steps += 1;
+    state.x = (state.x + slope.0) % map.width();
+    state.y = (state.y + slope.1) % map.height();
+
+    process_cell(state, map);
 
 }
