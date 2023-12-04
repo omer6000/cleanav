@@ -113,7 +113,7 @@ pub enum Output {
     Steps,
     TerminalSymbol,
     DistinctSymbols,
-    SymbolCount(Cell)
+    SymbolCount(Cell),
     // Trash,
     // Free,
     // Buoy,
@@ -163,7 +163,8 @@ pub(crate) fn output(output: &Output, end: (crate::map::Map, State)) -> String {
             return distinct.to_string();
         },
         Output::TerminalSymbol => {
-            match end.1.lastcell {
+            // match end.1.lastcell {
+            match end.0.get((end.1.x,end.1.y)) {
                 Cell::Free => return '.'.to_string(),
                 Cell::Trash => return 'X'.to_string(),
                 Cell::Buoy => return 'O'.to_string(),
