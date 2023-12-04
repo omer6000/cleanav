@@ -2,7 +2,25 @@ use nalgebra::{DMatrix, RowDVector};
 
 pub fn generate_transition_matrix(width: usize, height: usize) -> DMatrix<f64> {
     // Hint: use possible_moves() and compute_step() from crate::markov
-    todo!()
+    // let moves = crate::markov::possible_moves();
+    // todo!()
+    let total_states = width * height;
+    let moves = crate::markov::possible_moves();
+    let mut t_matrix = DMatrix::<f64>::zeros(total_states, total_states);
+    
+    for i in 0..width {
+        for j in 0..height {
+            let state_index = i*height+j; //converting 2d index to 1d
+            for m in &moves {
+                let step = crate::markov::compute_step((i,j), (m.0,m.1), (width,height));
+                let step_index = step.0*height+step.1;
+                t_matrix[(state_index,step_index)] = t_matrix[(state_index,step_index)] + 1.0/17.0;
+            }
+        }
+    }
+    
+    return t_matrix;
+
 }
 
 impl crate::markov::StochasticModel {
