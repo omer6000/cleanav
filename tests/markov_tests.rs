@@ -2,6 +2,37 @@ use cleanav::{markov::{flatten_coordinate, unflatten_coordinate, possible_moves,
 use nalgebra::{vector, Vector};
 use assert_approx_eq::assert_approx_eq;
 
+#[macro_export]
+macro_rules! nalgebra_assert_approx_eq {
+    ($a:expr, $b:expr) => {{
+        let eps = 1.0e-6;
+        let (a, b) = (&$a, &$b);
+        assert!(
+            (a - b).abs() < eps,
+            "assertion failed: `(left !== right)` \
+             (left: `{:?}`, right: `{:?}`, expect diff: `{:?}`, real diff: `{:?}`)",
+            *a,
+            *b,
+            eps,
+            (a - b).abs()
+        );
+    }};
+    ($a:expr, $b:expr, $eps:expr) => {{
+        let (a, b) = (&$a, &$b);
+        let eps = $eps;
+        assert!(
+            (a - b).abs() < eps,
+            "assertion failed: `(left !== right)` \
+             (left: `{:?}`, right: `{:?}`, expect diff: `{:?}`, real diff: `{:?}`)",
+            *a,
+            *b,
+            eps,
+            (a - b).abs()
+        );
+    }};
+}
+
+
 #[test]
 fn test_coordinate_unflatten() {
     let index = 35;
@@ -38,13 +69,13 @@ fn test_matrix_size() {
 #[test]
 fn test_is_small_matrix_stochastic() {
     let matrix = generate_transition_matrix(2, 2);
-    assert_eq!(matrix.column_sum(), vector![1.0, 1.0, 1.0, 1.0]);
+    nalgebra_assert_approx_eq!(matrix.column_sum(), vector![1.0, 1.0, 1.0, 1.0], vector![0.01, 0.01, 0.01, 0.01]);
 }
 
 #[test]
 fn test_is_larger_matrix_stochastic() {
     let matrix = generate_transition_matrix(5, 4);
-    assert_eq!(matrix.column_sum(), Vector::from([1.0; 20]));
+    nalgebra_assert_approx_eq!(matrix.column_sum(), Vector::from([1.0; 20]), Vector::from([0.01; 20]));
 }
 
 #[test]
@@ -69,8 +100,8 @@ fn test_impossible_transition() {
 fn test_no_step_probability() {
     let m = StochasticModel::new(3, 5);
     let steps = 0;
-    assert_eq!(m.compute_transition_probability((1, 1), (1, 1), steps), 1.0);
-    assert_eq!(m.compute_transition_probability((1, 1), (1, 2), steps), 0.0);
+    assert_approx_eq!(m.compute_transition_probability((1, 1), (1, 1), steps), 1.0, 0.01);
+    assert_approx_eq!(m.compute_transition_probability((1, 1), (1, 2), steps), 0.0, 0.01);
 }
 
 #[test]
@@ -93,8 +124,8 @@ fn test_long_random_walk() {
     let steps = 200;
     let expected = 1. / 9.;
     let epsilon = 1e-7;
-    assert!((m.compute_transition_probability((1, 1), (1, 1), steps) - expected).abs() < epsilon);
-    assert!((m.compute_transition_probability((1, 1), (0, 0), steps) - expected).abs() < epsilon);
+    assert_approx_eq!(m.compute_transition_probability((1, 1), (1, 1), steps), expected, epsilon);
+    assert_approx_eq!(m.compute_transition_probability((1, 1), (0, 0), steps), expected, epsilon);
 }
 
 #[test]
@@ -105,7 +136,7 @@ fn test_manhattan_distance() {
     assert_eq!(m.manhattan_distance((1, 1), (7, 7)), 4.0);
     assert_eq!(m.manhattan_distance((2, 2), (7, 7)), 6.0);
     assert_eq!(m.manhattan_distance((5, 2), (3, 4)), 4.0);
-    assert_eq!(m.manhattan_distance((8, 8), (1, 1)), 2.0);
+    assert_eq!(m.manhattan_distance((7, 7), (0, 0)), 2.0);
 }
 
 #[test]

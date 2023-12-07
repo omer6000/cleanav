@@ -55,37 +55,40 @@ impl crate::markov::StochasticModel {
         return self.compute_state_distribution(start, steps)[end_index];
     }
 
-    pub fn manhattan_distance(&self, from: (usize, usize), to: (usize, usize)) -> f64 {
-        // Hint: The obvious path might not be the fastest (keep position wrapping in mind)
-        // todo!()
-        let mut x_diff = (from.0 - to.0) as f64;
-        let mut y_diff = (from.1 - to.1) as f64;
+    fn compute_path(&self,from: (f64, f64), to: (f64, f64)) -> f64 {
+        let mut x_diff = from.0 - to.0;
+        let mut y_diff = from.1 - to.1;
         if x_diff < 0.0 {
             x_diff *= -1.0;
         }
         if y_diff < 0.0 {
             y_diff *= -1.0;
         }
-        let d1 =  x_diff + y_diff;
+        return x_diff + y_diff;
+    }
+    
+    pub fn manhattan_distance(&self, from: (usize, usize), to: (usize, usize)) -> f64 {
+        // Hint: The obvious path might not be the fastest (keep position wrapping in mind)
+        // todo!()
+        let width = self.width as f64;
+        let height = self.height as f64;
+        let x_from = from.0 as f64;
+        let y_from = from.1 as f64;
+        let x_to = to.0 as f64;
+        let y_to = to.1 as f64;
+        
+        let d1 = self.compute_path((x_from,y_from),(x_to,y_to));
+        let d2 = self.compute_path((x_from,y_from),(x_to - width,y_to));
+        let d3 = self.compute_path((x_from,y_from),(x_to,y_to - height));
+        let d4 = self.compute_path((x_from,y_from),(x_to - width,y_to - height));
+        let d5 = self.compute_path((x_from- width,y_from),(x_to,y_to));
+        let d6 = self.compute_path((x_from,y_from- height),(x_to,y_to));
+        let d7 = self.compute_path((x_from - width,y_from - height),(x_to,y_to));
 
-        // Also cosidering using negative coordinates
-        let neg_to = ((to.0 - self.width) as f64,(to.1 - self.height) as f64);
-        let mut x_diff2 = from.0 as f64 - neg_to.0;
-        let mut y_diff2 = from.1 as f64 - neg_to.1;
-        if x_diff2 < 0.0 {
-            x_diff2 *= -1.0;
-        }
-        if y_diff2 < 0.0 {
-            y_diff2 *= -1.0;
-        }
+        let distances = RowDVector::from_row_slice(&[d1,d2,d3,d4,d5,d6,d7]);
+        
+        return distances.min();
 
-        let d2 = x_diff2 + y_diff2;
-        if d1 < d2 {
-            return d1;
-        }
-        else {
-            return d2;
-        }
     }
 
     pub fn expected_distance(&self, start: (usize, usize), steps: usize) -> f64 {

@@ -19,10 +19,10 @@ fn main() {
     //     Output::from_str(&output).unwrap(),
     // );
     // tui::output(&result)
-    let width = 5;
-    let height = 4;
-    let start = (1,1);
-    let end = (2,2);
+    let width = 8;
+    let height = 8;
+    // let start = (1,1);
+    // let end = (2,2);
     let tm = cleanav::analysis::generate_transition_matrix(width, height);
     let model = cleanav::markov::StochasticModel {
         transition_matrix: tm,
@@ -30,7 +30,8 @@ fn main() {
         height: height
     };
     // let vec = model.compute_state_distribution((0,0),5);
-    println!("{:?}",model.compute_transition_probability(start, end, 3));
+    // println!("{:?}",model.compute_transition_probability(start, end, 3));
+    print!("{:?}",model.manhattan_distance((7, 7), (0, 0)))
 
     // use nalgebra::{Matrix4, Vector4, U2, U3};
 
