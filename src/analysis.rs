@@ -10,19 +10,15 @@ pub fn generate_transition_matrix(width: usize, height: usize) -> DMatrix<f64> {
     
     for i in 0..width {
         for j in 0..height {
-            // let state_index = i*height+j; //converting 2d index to 1d
             let state_index = crate::markov::flatten_coordinate((i,j), width);
             for m in &moves {
                 let step = crate::markov::compute_step((i,j), (m.0,m.1), (width,height));
-                // let step_index = step.0*height+step.1;
                 let step_index = crate::markov::flatten_coordinate((step.0,step.1), width);
                 t_matrix[(state_index,step_index)] = t_matrix[(state_index,step_index)] + 1.0/17.0;
             }
         }
     }
-    
     return t_matrix;
-
 }
 
 impl crate::markov::StochasticModel {
@@ -54,45 +50,45 @@ impl crate::markov::StochasticModel {
         let end_index = crate::markov::flatten_coordinate(end, self.width);
         return self.compute_state_distribution(start, steps)[end_index];
     }
-
-    fn compute_path(&self,from: (f64, f64), to: (f64, f64)) -> f64 {
-        let mut x_diff = from.0 - to.0;
-        let mut y_diff = from.1 - to.1;
-        if x_diff < 0.0 {
-            x_diff *= -1.0;
-        }
-        if y_diff < 0.0 {
-            y_diff *= -1.0;
-        }
-        return x_diff + y_diff;
-    }
     
     pub fn manhattan_distance(&self, from: (usize, usize), to: (usize, usize)) -> f64 {
         // Hint: The obvious path might not be the fastest (keep position wrapping in mind)
         // todo!()
+
+        let mut x_diff = from.0 as f64 - to.0 as f64;
+        let mut y_diff = from.1 as f64 - to.1 as f64;
+
         let width = self.width as f64;
         let height = self.height as f64;
-        let x_from = from.0 as f64;
-        let y_from = from.1 as f64;
-        let x_to = to.0 as f64;
-        let y_to = to.1 as f64;
-        
-        let d1 = self.compute_path((x_from,y_from),(x_to,y_to));
-        let d2 = self.compute_path((x_from,y_from),(x_to - width,y_to));
-        let d3 = self.compute_path((x_from,y_from),(x_to,y_to - height));
-        let d4 = self.compute_path((x_from,y_from),(x_to - width,y_to - height));
-        let d5 = self.compute_path((x_from- width,y_from),(x_to,y_to));
-        let d6 = self.compute_path((x_from,y_from- height),(x_to,y_to));
-        let d7 = self.compute_path((x_from - width,y_from - height),(x_to,y_to));
 
-        let distances = RowDVector::from_row_slice(&[d1,d2,d3,d4,d5,d6,d7]);
+        if x_diff < 0.0 {
+            x_diff *= -1.0
+        }
+        if x_diff > width - x_diff {
+            x_diff = width - x_diff;
+        }
+        if y_diff < 0.0 {
+            y_diff *= -1.0;
+        }
+        if y_diff > (height - y_diff) {
+            y_diff = height - y_diff;
+        }
+        return x_diff + y_diff;
         
-        return distances.min();
-
     }
 
     pub fn expected_distance(&self, start: (usize, usize), steps: usize) -> f64 {
         // Hint: use manhattan_distance
-        todo!();
+        let total_states = self.width * self.height;
+        let state_dist = self.compute_state_distribution(start, steps);
+        let mut manhattan_dist = RowDVector::<f64>::zeros(total_states);
+        for i in 0..self.width {
+            for j in 0..self.height {
+                let index = self.to_index((i,j));
+                manhattan_dist[index] = self.manhattan_distance(start, (i,j));
+            }
+        }
+        let expected_dist = manhattan_dist * state_dist.transpose();
+        return expected_dist[0];
     }
 }
